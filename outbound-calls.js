@@ -2,6 +2,20 @@ import WebSocket from "ws";
 import Twilio from "twilio";
 
 export function registerOutboundRoutes(fastify) {
+  // Add form body parser
+  fastify.addContentTypeParser('application/x-www-form-urlencoded', { parseAs: 'string' }, function (req, body, done) {
+    try {
+      const parsed = new URLSearchParams(body);
+      const result = {};
+      for (const [key, value] of parsed) {
+        result[key] = value;
+      }
+      done(null, result);
+    } catch (err) {
+      done(err);
+    }
+  });
+
   // Remove environment variable checks since we'll use user-provided credentials
   
   fastify.post("/outbound-call", async (request, reply) => {
@@ -55,7 +69,6 @@ export function registerOutboundRoutes(fastify) {
       // Get parameters from either query or body
       const params = request.method === 'GET' ? request.query : request.body;
       
-      // Log what we're receiving
       console.log('TwiML request:', {
         method: request.method,
         params,
@@ -69,6 +82,9 @@ export function registerOutboundRoutes(fastify) {
       const firstMessage = params.firstMessage || request.query.firstMessage;
       const elevenLabsKey = params.elevenLabsKey || request.query.elevenLabsKey;
       const agentId = params.agentId || request.query.agentId;
+
+      // Log the parameters we're using
+      console.log('Using parameters:', { prompt, firstMessage, elevenLabsKey, agentId });
 
       const twimlResponse = `<?xml version="1.0" encoding="UTF-8"?>
         <Response>
