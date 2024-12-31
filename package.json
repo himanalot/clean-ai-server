@@ -1,0 +1,12 @@
+{
+  "name": "ai-caller-server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "@fastify/websocket": "^8.2.0",
+    "fastify": "^4.24.3",
+    "twilio": "^4.19.0",
+    "ws": "^8.14.2"
+  }
+}
