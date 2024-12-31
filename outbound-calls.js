@@ -48,22 +48,42 @@ export function registerOutboundRoutes(fastify) {
     }
   });
 
-  fastify.all("/outbound-call-twiml", async (request, reply) => {
-    const { prompt, firstMessage, elevenLabsKey, agentId } = request.query;
+  fastify.route({
+    method: ['GET', 'POST'],
+    url: '/outbound-call-twiml',
+    handler: async (request, reply) => {
+      // Get parameters from either query or body
+      const params = request.method === 'GET' ? request.query : request.body;
+      
+      // Log what we're receiving
+      console.log('TwiML request:', {
+        method: request.method,
+        params,
+        query: request.query,
+        body: request.body,
+        headers: request.headers
+      });
 
-    const twimlResponse = `<?xml version="1.0" encoding="UTF-8"?>
-      <Response>
-        <Connect>
-          <Stream url="wss://${request.headers.host}/outbound-media-stream">
-            <Parameter name="prompt" value="${prompt}" />
-            <Parameter name="firstMessage" value="${firstMessage}" />
-            <Parameter name="elevenLabsKey" value="${elevenLabsKey}" />
-            <Parameter name="agentId" value="${agentId}" />
-          </Stream>
-        </Connect>
-      </Response>`;
+      // Get parameters from either source
+      const prompt = params.prompt || request.query.prompt;
+      const firstMessage = params.firstMessage || request.query.firstMessage;
+      const elevenLabsKey = params.elevenLabsKey || request.query.elevenLabsKey;
+      const agentId = params.agentId || request.query.agentId;
 
-    reply.type("text/xml").send(twimlResponse);
+      const twimlResponse = `<?xml version="1.0" encoding="UTF-8"?>
+        <Response>
+          <Connect>
+            <Stream url="wss://${request.headers.host}/outbound-media-stream">
+              <Parameter name="prompt" value="${prompt}" />
+              <Parameter name="firstMessage" value="${firstMessage}" />
+              <Parameter name="elevenLabsKey" value="${elevenLabsKey}" />
+              <Parameter name="agentId" value="${agentId}" />
+            </Stream>
+          </Connect>
+        </Response>`;
+
+      reply.type("text/xml").send(twimlResponse);
+    }
   });
 
   fastify.register(async (fastifyInstance) => {
